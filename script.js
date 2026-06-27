@@ -236,9 +236,9 @@ window.performCalculation = function() {
     if (drug.calcBy === 'range') {
         dosageFound = drug.rules.find(r => evaluateValue >= r.start && evaluateValue <= r.end);
     } else {
-        // For static / constant rules, match against nearest matched threshold mapping
-        // If multiple matches are found, we'll fall back to the closest threshold limit matching criteria
-        dosageFound = drug.rules.find(r => evaluateValue >= r.threshold) || drug.rules[0];
+        // Pick the rule with the highest threshold that the patient value still meets
+        const matches = drug.rules.filter(r => evaluateValue >= r.threshold);
+        dosageFound = matches.reduce((best, r) => (!best || r.threshold > best.threshold) ? r : best, null) || drug.rules[0];
     }
 
     if (!dosageFound) {

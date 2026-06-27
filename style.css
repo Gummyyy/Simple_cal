@@ -100,6 +100,39 @@ button.primary-btn, button.success-btn {
     margin-top: 10px;
 }
 
+textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: inherit;
+    resize: vertical;
+}
+
+.concentration-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.concentration-row input {
+    flex: 1;
+}
+
+.conc-sep {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #4a5568;
+}
+
+.maxdose-note {
+    color: #d69e2e;
+    font-size: 0.9rem;
+    margin-top: 6px;
+}
+
 .drug-card {
     border: 1px solid #e2e8f0;
     border-radius: 8px;
@@ -121,9 +154,12 @@ button.primary-btn, button.success-btn {
 }
 
 .drug-meta {
+    display: flex;
+    gap: 16px;
     font-size: 0.85rem;
     color: #718096;
     margin-bottom: 8px;
+    flex-wrap: wrap;
 }
 
 .rules-list {

@@ -35,6 +35,7 @@ window.switchTab = function(tabId) {
     }
 }
 
+
 // Show/Hide fields based on calculation type selection
 window.toggleFormFields = function() {
     const type = document.getElementById('calc-type').value;
@@ -42,7 +43,8 @@ window.toggleFormFields = function() {
         document.getElementById('standard-dosage-inputs').style.display = 'none';
         document.getElementById('age-range-inputs').style.display = 'block';
     } else {
-        document.getElementById('standard-dosage-inputs').style.display = 'block';
+        // FIX: Restore to 'flex' instead of 'block' to keep your side-by-side layout intact
+        document.getElementById('standard-dosage-inputs').style.display = 'flex';
         document.getElementById('age-range-inputs').style.display = 'none';
     }
 }
@@ -93,6 +95,9 @@ window.saveDrug = async function(e) {
         
         document.getElementById('drug-form').reset();
         document.getElementById('range-rows').innerHTML = '';
+        document.getElementById('calc-type').value = 'weight';
+        document.getElementById('standard-dosage-inputs').style.display = 'flex';
+        document.getElementById('age-range-inputs').style.display = 'none';
         window.switchTab('calc-tab');
     } catch (error) {
         console.error("Error writing document to Firebase: ", error);

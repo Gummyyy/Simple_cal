@@ -269,19 +269,20 @@ window.performCalculation = function() {
 // LOAD DRUG LIST
 async function loadDrugList() {
     const container = document.getElementById('drug-list-container');
-    container.innerHTML = '<p>Loading...</p>';
 
-    try {
-        const querySnapshot = await getDocs(collection(db, "drugs"));
-        if (querySnapshot.empty) {
-            container.innerHTML = '<p>No drugs in the database.</p>';
-            return;
-        }
+    if (drugDatabase.length === 0) {
+        container.innerHTML = '<p>Loading...</p>';
+        await fetchDrugsFromFirebase();
+    }
 
-        container.innerHTML = '';
-        querySnapshot.forEach((d) => {
-            const drug = d.data();
-            const id = d.id;
+    if (drugDatabase.length === 0) {
+        container.innerHTML = '<p>No drugs in the database.</p>';
+        return;
+    }
+
+    container.innerHTML = '';
+    drugDatabase.forEach((drug) => {
+            const id = drug.id;
 
             const rulesHtml = drug.rules.map(r => {
                 if (drug.calcBy === 'range') {
@@ -306,11 +307,7 @@ async function loadDrugList() {
                 ${contraHtml}
             `;
             container.appendChild(card);
-        });
-    } catch (error) {
-        console.error("Error loading drug list:", error);
-        container.innerHTML = '<p>Failed to load drug list.</p>';
-    }
+    });
 }
 
 // DELETE DRUG FROM FIRESTORE
@@ -318,6 +315,7 @@ window.deleteDrug = async function(id) {
     if (!confirm('Delete this drug from the database?')) return;
     try {
         await deleteDoc(doc(db, "drugs", id));
+        drugDatabase = [];
         loadDrugList();
     } catch (error) {
         console.error("Error deleting drug:", error);

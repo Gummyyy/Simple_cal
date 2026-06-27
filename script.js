@@ -107,13 +107,14 @@ window.performCalculation = function() {
         cappedByMax = true;
     }
 
-    const prepMl = doseMg / concentration;
-    const dailyMl = prepMl * drug.timesPerDay;
+    const dailyMl = doseMg / concentration;
+    const perDoseMl = dailyMl / drug.timesPerDay;
+    const perDoseMg = doseMg / drug.timesPerDay;
 
     document.getElementById('out-preparation').textContent =
-        `${prepMl.toFixed(2)} ml  (${doseMg.toFixed(2)} mg,  ${drug.timesPerDay}x/day)`;
+        `${dailyMl.toFixed(2)} ml  (${doseMg.toFixed(2)} mg)`;
     document.getElementById('out-daily').textContent =
-        `${dailyMl.toFixed(2)} ml`;
+        `${perDoseMl.toFixed(2)} ml  (${perDoseMg.toFixed(2)} mg)  ×  ${drug.timesPerDay} times/day`;
 
     const maxNote = document.getElementById('out-maxdose-note');
     maxNote.textContent = cappedByMax

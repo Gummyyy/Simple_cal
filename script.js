@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCgOLUbiqiru0hB23Zf_tQMzNMw20SVEzY",
@@ -300,7 +300,10 @@ async function loadDrugList() {
             card.innerHTML = `
                 <div class="drug-card-header">
                     <span class="drug-card-name">${drug.name}</span>
-                    <button class="delete-btn" onclick="deleteDrug('${id}')">Delete</button>
+                    <div class="card-actions">
+                        <button class="edit-btn" onclick="openEditModal('${id}')">Edit</button>
+                        <button class="delete-btn" onclick="deleteDrug('${id}')">Delete</button>
+                    </div>
                 </div>
                 <p class="drug-meta">From: <strong>${drug.calcFrom}</strong> &nbsp;|&nbsp; By: <strong>${drug.calcBy}</strong> &nbsp;|&nbsp; ${drug.timesPerDay}x/day</p>
                 <ul class="rules-list">${rulesHtml}</ul>
@@ -320,6 +323,165 @@ window.deleteDrug = async function(id) {
     } catch (error) {
         console.error("Error deleting drug:", error);
         alert("Failed to delete drug.");
+    }
+}
+
+// EDIT MODAL — helpers
+function getEditUnitText() {
+    const fromValue = document.getElementById('edit-calc-from').value;
+    if (fromValue === 'age') return 'years';
+    if (fromValue === 'weight') return 'kg';
+    if (fromValue === 'height*weight') return 'factor';
+    return 'value';
+}
+
+window.toggleEditFormFields = function() {
+    const calcBy = document.getElementById('edit-calc-by').value;
+    document.getElementById('edit-single-rule-rows').innerHTML = '';
+    document.getElementById('edit-range-rows').innerHTML = '';
+
+    if (calcBy === 'range') {
+        document.getElementById('edit-single-rule-inputs').style.display = 'none';
+        document.getElementById('edit-range-rule-inputs').style.display = 'block';
+        addEditRangeRow();
+    } else {
+        document.getElementById('edit-single-rule-inputs').style.display = 'block';
+        document.getElementById('edit-range-rule-inputs').style.display = 'none';
+        document.getElementById('edit-add-single-btn').style.display = calcBy === 'constant' ? 'inline-block' : 'none';
+        addEditSingleRuleRow();
+    }
+}
+
+window.addEditSingleRuleRow = function(threshold = '', dosage = '', unit = 'ml') {
+    const wrapper = document.getElementById('edit-single-rule-rows');
+    const unitText = getEditUnitText();
+    const row = document.createElement('div');
+    row.className = 'input-row edit-single-entry';
+    row.innerHTML = `
+        <div>
+            <label>Threshold (${unitText}):</label>
+            <input type="number" step="0.1" class="es-threshold" value="${threshold}" required>
+        </div>
+        <div>
+            <label>Dosage:</label>
+            <input type="number" step="0.1" class="es-dosage" value="${dosage}" required>
+        </div>
+        <div>
+            <label>Dose Unit:</label>
+            <select class="es-unit">
+                <option value="ml" ${unit === 'ml' ? 'selected' : ''}>ml</option>
+                <option value="cc" ${unit === 'cc' ? 'selected' : ''}>cc</option>
+                <option value="tablespoon" ${unit === 'tablespoon' ? 'selected' : ''}>tablespoon</option>
+            </select>
+        </div>
+    `;
+    wrapper.appendChild(row);
+}
+
+window.addEditRangeRow = function(start = '', end = '', dosage = '', unit = 'ml') {
+    const wrapper = document.getElementById('edit-range-rows');
+    const unitText = getEditUnitText();
+    const row = document.createElement('div');
+    row.className = 'input-row edit-range-entry';
+    row.innerHTML = `
+        <div>
+            <label>Start (${unitText}):</label>
+            <input type="number" step="0.1" class="er-start" value="${start}" required>
+        </div>
+        <div>
+            <label>End (${unitText}):</label>
+            <input type="number" step="0.1" class="er-end" value="${end}" required>
+        </div>
+        <div>
+            <label>Dosage:</label>
+            <input type="number" step="0.1" class="er-dosage" value="${dosage}" required>
+        </div>
+        <div>
+            <label>Dose Unit:</label>
+            <select class="er-unit">
+                <option value="ml" ${unit === 'ml' ? 'selected' : ''}>ml</option>
+                <option value="cc" ${unit === 'cc' ? 'selected' : ''}>cc</option>
+                <option value="tablespoon" ${unit === 'tablespoon' ? 'selected' : ''}>tablespoon</option>
+            </select>
+        </div>
+    `;
+    wrapper.appendChild(row);
+}
+
+// OPEN EDIT MODAL — populate form with existing drug data
+window.openEditModal = function(id) {
+    const drug = drugDatabase.find(d => d.id === id);
+    if (!drug) return;
+
+    document.getElementById('edit-drug-form').dataset.editId = id;
+    document.getElementById('edit-drug-name').value = drug.name;
+    document.getElementById('edit-calc-from').value = drug.calcFrom;
+    document.getElementById('edit-calc-by').value = drug.calcBy;
+    document.getElementById('edit-times-per-day').value = drug.timesPerDay;
+    document.getElementById('edit-contraindications').value = (drug.contraindications || []).join(', ');
+
+    // Clear rule rows, then populate with saved rules
+    document.getElementById('edit-single-rule-rows').innerHTML = '';
+    document.getElementById('edit-range-rows').innerHTML = '';
+
+    if (drug.calcBy === 'range') {
+        document.getElementById('edit-single-rule-inputs').style.display = 'none';
+        document.getElementById('edit-range-rule-inputs').style.display = 'block';
+        document.getElementById('edit-add-single-btn').style.display = 'none';
+        drug.rules.forEach(r => addEditRangeRow(r.start, r.end, r.dosage, r.unit));
+    } else {
+        document.getElementById('edit-single-rule-inputs').style.display = 'block';
+        document.getElementById('edit-range-rule-inputs').style.display = 'none';
+        document.getElementById('edit-add-single-btn').style.display = drug.calcBy === 'constant' ? 'inline-block' : 'none';
+        drug.rules.forEach(r => addEditSingleRuleRow(r.threshold, r.dosage, r.unit));
+    }
+
+    document.getElementById('edit-modal').style.display = 'flex';
+}
+
+window.closeEditModal = function() {
+    document.getElementById('edit-modal').style.display = 'none';
+}
+
+// SAVE EDIT TO FIRESTORE
+window.saveEditDrug = async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit-drug-form').dataset.editId;
+    const name = document.getElementById('edit-drug-name').value;
+    const calcFrom = document.getElementById('edit-calc-from').value;
+    const calcBy = document.getElementById('edit-calc-by').value;
+    const timesPerDay = parseInt(document.getElementById('edit-times-per-day').value) || 1;
+    const contraInput = document.getElementById('edit-contraindications').value;
+    const contraindications = contraInput.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+
+    const rules = [];
+    if (calcBy === 'range') {
+        document.querySelectorAll('.edit-range-entry').forEach(row => {
+            rules.push({
+                start: parseFloat(row.querySelector('.er-start').value),
+                end: parseFloat(row.querySelector('.er-end').value),
+                dosage: parseFloat(row.querySelector('.er-dosage').value),
+                unit: row.querySelector('.er-unit').value
+            });
+        });
+    } else {
+        document.querySelectorAll('.edit-single-entry').forEach(row => {
+            rules.push({
+                threshold: parseFloat(row.querySelector('.es-threshold').value),
+                dosage: parseFloat(row.querySelector('.es-dosage').value),
+                unit: row.querySelector('.es-unit').value
+            });
+        });
+    }
+
+    try {
+        await updateDoc(doc(db, "drugs", id), { name, calcFrom, calcBy, timesPerDay, contraindications, rules });
+        closeEditModal();
+        drugDatabase = [];
+        loadDrugList();
+    } catch (error) {
+        console.error("Error updating drug:", error);
+        alert("Failed to save changes.");
     }
 }
 

@@ -139,6 +139,25 @@ button.primary-btn, button.success-btn {
     margin-top: 6px;
 }
 
+.card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.edit-btn {
+    padding: 6px 14px;
+    background: #3182ce;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.edit-btn:hover {
+    background: #2b6cb0;
+}
+
 .delete-btn {
     padding: 6px 14px;
     background: #e53e3e;
@@ -151,4 +170,56 @@ button.primary-btn, button.success-btn {
 
 .delete-btn:hover {
     background: #c53030;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow-y: auto;
+    padding: 40px 20px;
+    z-index: 100;
+}
+
+.modal-box {
+    background: #fff;
+    width: 100%;
+    max-width: 600px;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-box h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #2d3748;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.modal-actions .success-btn {
+    flex: 1;
+}
+
+.cancel-btn {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    color: #4a5568;
+}
+
+.cancel-btn:hover {
+    background: #f7fafc;
 }

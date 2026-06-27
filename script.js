@@ -1,8 +1,6 @@
-// 1. Import Firebase SDK modules from official CDNs
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// 2. PASTE YOUR EXACT FIREBASE CONFIG OBJECT HERE
 const firebaseConfig = {
     apiKey: "AIzaSyCgOLUbiqiru0hB23Zf_tQMzNMw20SVEzY",
     authDomain: "drugcal-5ea14.firebaseapp.com",
@@ -11,16 +9,23 @@ const firebaseConfig = {
     messagingSenderId: "283126928680",
     appId: "1:283126928680:web:c5feefee4994aea6acac1d",
     measurementId: "G-W8816DLN68"
-  };
+};
 
-// 3. Initialize Firebase and Firestore Database instance
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Global Array to keep a copy of data in memory for fast local queries
 let drugDatabase = [];
 
-// Expose navigation function globally so onclick="" attributes can find it
+// Helper to determine the unit suffix text based on 'Calculated From' selection
+function getUnitText() {
+    const fromValue = document.getElementById('calc-from').value;
+    if (fromValue === 'age') return 'years';
+    if (fromValue === 'weight') return 'kg';
+    if (fromValue === 'height*weight') return 'factor';
+    return 'value';
+}
+
+// Global Tab Navigation
 window.switchTab = function(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -35,95 +40,162 @@ window.switchTab = function(tabId) {
     }
 }
 
+// Updates live display placeholders when 'Calculated From' updates
+window.updateCalculatedFromLabels = function() {
+    toggleFormFields();
+}
 
-// Show/Hide fields based on calculation type selection
+// Re-evaluates form structural rules based on layout selections
 window.toggleFormFields = function() {
-    const type = document.getElementById('calc-type').value;
-    if (type === 'age-range') {
-        document.getElementById('standard-dosage-inputs').style.display = 'none';
-        document.getElementById('age-range-inputs').style.display = 'block';
+    const calcBy = document.getElementById('calc-by').value;
+    const singleContainer = document.getElementById('single-rule-inputs');
+    const rangeContainer = document.getElementById('range-rule-inputs');
+    const addSingleBtn = document.getElementById('add-single-btn');
+    
+    // Reset dynamic UI nodes
+    document.getElementById('single-rule-rows').innerHTML = '';
+    document.getElementById('range-rows').innerHTML = '';
+
+    if (calcBy === 'range') {
+        singleContainer.style.display = 'none';
+        rangeContainer.style.display = 'block';
+        addRangeRow();
     } else {
-        // FIX: Restore to 'flex' instead of 'block' to keep your side-by-side layout intact
-        document.getElementById('standard-dosage-inputs').style.display = 'flex';
-        document.getElementById('age-range-inputs').style.display = 'none';
+        singleContainer.style.display = 'block';
+        rangeContainer.style.display = 'none';
+        
+        // Show the add row button ONLY for constant mode
+        addSingleBtn.style.display = (calcBy === 'constant') ? 'inline-block' : 'none';
+        addSingleRuleRow();
     }
 }
 
-// Age Range dynamic fields builder
-window.addAgeRangeRow = function() {
-    const wrapper = document.getElementById('range-rows');
+// Injects row for Static and Constant rules
+window.addSingleRuleRow = function() {
+    const wrapper = document.getElementById('single-rule-rows');
     const row = document.createElement('div');
-    row.className = 'input-row range-entry';
+    row.className = 'input-row single-entry';
+    
+    const unitText = getUnitText();
+    
     row.innerHTML = `
-        <input type="number" placeholder="Min Age" class="r-min" required>
-        <input type="number" placeholder="Max Age" class="r-max" required>
-        <input type="number" step="0.1" placeholder="Normal" class="r-norm" required>
-        <input type="number" step="0.1" placeholder="Emerg" class="r-emerg" required>
+        <div>
+            <label>Threshold (${unitText}):</label>
+            <input type="number" step="0.1" class="s-threshold" required>
+        </div>
+        <div>
+            <label>Dosage:</label>
+            <input type="number" step="0.1" class="s-dosage" required>
+        </div>
+        <div>
+            <label>Dose Unit:</label>
+            <select class="s-unit">
+                <option value="ml">ml</option>
+                <option value="cc">cc</option>
+                <option value="tablespoon">tablespoon</option>
+            </select>
+        </div>
     `;
     wrapper.appendChild(row);
 }
 
-// SAVE TO FIREBASE FIRESTORE
+// Injects row for Range configurations
+window.addRangeRow = function() {
+    const wrapper = document.getElementById('range-rows');
+    const row = document.createElement('div');
+    row.className = 'input-row range-entry';
+    
+    const unitText = getUnitText();
+
+    row.innerHTML = `
+        <div>
+            <label>Start (${unitText}):</label>
+            <input type="number" step="0.1" class="r-start" required>
+        </div>
+        <div>
+            <label>End (${unitText}):</label>
+            <input type="number" step="0.1" class="r-end" required>
+        </div>
+        <div>
+            <label>Dosage:</label>
+            <input type="number" step="0.1" class="r-dosage" required>
+        </div>
+        <div>
+            <label>Dose Unit:</label>
+            <select class="r-unit">
+                <option value="ml">ml</option>
+                <option value="cc">cc</option>
+                <option value="tablespoon">tablespoon</option>
+            </select>
+        </div>
+    `;
+    wrapper.appendChild(row);
+}
+
+// SAVE DATA TO FIRESTORE
 window.saveDrug = async function(e) {
     e.preventDefault();
     const name = document.getElementById('drug-name').value;
-    const calcType = document.getElementById('calc-type').value;
+    const calcFrom = document.getElementById('calc-from').value;
+    const calcBy = document.getElementById('calc-by').value;
+    const timesPerDay = parseInt(document.getElementById('times-per-day').value) || 1;
     const contraInput = document.getElementById('contraindications').value;
     const contraindications = contraInput.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
 
-    let newDrug = { name, calcType, contraindications };
+    let newDrug = { name, calcFrom, calcBy, timesPerDay, contraindications, rules: [] };
 
-    if (calcType === 'age-range') {
-        newDrug.ranges = [];
+    if (calcBy === 'range') {
         document.querySelectorAll('.range-entry').forEach(row => {
-            newDrug.ranges.push({
-                min: parseInt(row.querySelector('.r-min').value),
-                max: parseInt(row.querySelector('.r-max').value),
-                normal: parseFloat(row.querySelector('.r-norm').value),
-                emergency: parseFloat(row.querySelector('.r-emerg').value)
+            newDrug.rules.push({
+                start: parseFloat(row.querySelector('.r-start').value),
+                end: parseFloat(row.querySelector('.r-end').value),
+                dosage: parseFloat(row.querySelector('.r-dosage').value),
+                unit: row.querySelector('.r-unit').value
             });
         });
     } else {
-        newDrug.normal = parseFloat(document.getElementById('base-normal').value) || 0;
-        newDrug.emergency = parseFloat(document.getElementById('base-emergency').value) || 0;
+        document.querySelectorAll('.single-entry').forEach(row => {
+            newDrug.rules.push({
+                threshold: parseFloat(row.querySelector('.s-threshold').value),
+                dosage: parseFloat(row.querySelector('.s-dosage').value),
+                unit: row.querySelector('.s-unit').value
+            });
+        });
     }
 
     try {
-        // Send object safely to Firestore cloud database under a collection named "drugs"
         await addDoc(collection(db, "drugs"), newDrug);
-        alert('Drug Saved Globally to Firebase!');
+        alert('Drug Saved Successfully!');
         
         document.getElementById('drug-form').reset();
-        document.getElementById('range-rows').innerHTML = '';
-        document.getElementById('calc-type').value = 'weight';
-        document.getElementById('standard-dosage-inputs').style.display = 'flex';
-        document.getElementById('age-range-inputs').style.display = 'none';
+        document.getElementById('calc-from').value = 'age';
+        document.getElementById('calc-by').value = 'static';
+        toggleFormFields();
         window.switchTab('calc-tab');
     } catch (error) {
-        console.error("Error writing document to Firebase: ", error);
+        console.error("Error writing document: ", error);
         alert("Failed to save data to cloud server.");
     }
 }
 
-// FETCH FROM FIREBASE FIRESTORE
+// FETCH FROM FIRESTORE
 async function fetchDrugsFromFirebase() {
     const select = document.getElementById('calc-drug-select');
     select.innerHTML = '<option>Loading database...</option>';
     
     try {
         const querySnapshot = await getDocs(collection(db, "drugs"));
-        drugDatabase = []; // clear previous local array cache
+        drugDatabase = [];
         
         querySnapshot.forEach((doc) => {
             let data = doc.data();
-            data.id = doc.id; // append the dynamic Firestore ID
+            data.id = doc.id;
             drugDatabase.push(data);
         });
 
-        // Populate dropdown menu with items
         select.innerHTML = '';
         if (drugDatabase.length === 0) {
-            select.innerHTML = '<option value="">No drugs found. Add one!</option>';
+            select.innerHTML = '<option value="">No drugs found.</option>';
             return;
         }
 
@@ -134,12 +206,12 @@ async function fetchDrugsFromFirebase() {
             select.appendChild(opt);
         });
     } catch (error) {
-        console.error("Error reading data from Firebase:", error);
+        console.error("Error reading data:", error);
         select.innerHTML = '<option>Error loading server records.</option>';
     }
 }
 
-// DOSAGE EVALUATION CORE
+// REFACTORED DOSAGE EVALUATION CORE
 window.performCalculation = function() {
     const drugId = document.getElementById('calc-drug-select').value;
     const age = parseInt(document.getElementById('patient-age').value) || 0;
@@ -149,28 +221,35 @@ window.performCalculation = function() {
     const drug = drugDatabase.find(d => d.id === drugId);
     if(!drug) return;
 
-    let normalDose = 0;
-    let emergencyDose = 0;
+    // Evaluate what target variable to match against
+    let evaluateValue = 0;
+    if (drug.calcFrom === 'age') evaluateValue = age;
+    else if (drug.calcFrom === 'weight') evaluateValue = weight;
+    else if (drug.calcFrom === 'height*weight') evaluateValue = height * weight;
+    else if (drug.calcFrom === 'constant') evaluateValue = 1; // absolute scale factor
 
-    if (drug.calcType === 'weight') {
-        normalDose = weight * drug.normal;
-        emergencyDose = weight * drug.emergency;
-    } else if (drug.calcType === 'height-weight') {
-        normalDose = (height * weight) * drug.normal;
-        emergencyDose = (height * weight) * drug.emergency;
-    } else if (drug.calcType === 'age-range') {
-        const matchedRange = drug.ranges.find(r => age >= r.min && age <= r.max);
-        if (matchedRange) {
-            normalDose = matchedRange.normal;
-            emergencyDose = matchedRange.emergency;
-        } else {
-            alert("No standard dosage rules match this patient's age range.");
-            return;
-        }
+    let dosageFound = null;
+
+    if (drug.calcBy === 'range') {
+        dosageFound = drug.rules.find(r => evaluateValue >= r.start && evaluateValue <= r.end);
+    } else {
+        // For static / constant rules, match against nearest matched threshold mapping
+        // If multiple matches are found, we'll fall back to the closest threshold limit matching criteria
+        dosageFound = drug.rules.find(r => evaluateValue >= r.threshold) || drug.rules[0];
     }
 
-    document.getElementById('out-normal').textContent = `${normalDose.toFixed(2)} mg`;
-    document.getElementById('out-emergency').textContent = `${emergencyDose.toFixed(2)} mg`;
+    if (!dosageFound) {
+        alert("No appropriate calculation metrics matched this patient's profile.");
+        return;
+    }
+
+    // Normal base calculation vs structured single application dose calculations
+    const normalDose = dosageFound.dosage;
+    const totalDailyDose = normalDose * drug.timesPerDay;
+    const doseUnit = dosageFound.unit;
+
+    document.getElementById('out-normal').textContent = `${normalDose} ${doseUnit} (${drug.timesPerDay} times/day)`;
+    document.getElementById('out-emergency').textContent = `${totalDailyDose} ${doseUnit} (Total Daily Dose)`;
 
     if(drug.contraindications && drug.contraindications.length > 0) {
         document.getElementById('out-warning').textContent = `⚠️ Warnings! Avoid if patient has vulnerabilities in: ${drug.contraindications.join(', ')}`;
@@ -179,5 +258,6 @@ window.performCalculation = function() {
     }
 }
 
-// Initial Boot run logic
+// Initial Boot Run 
+toggleFormFields();
 fetchDrugsFromFirebase();

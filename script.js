@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCgOLUbiqiru0hB23Zf_tQMzNMw20SVEzY",
@@ -37,9 +37,12 @@ window.switchTab = function(tabId) {
         }
     });
 
-    if(tabId === 'calc-tab') {
+    if (tabId === 'calc-tab') {
         fetchDrugsFromFirebase();
         document.getElementById('calc-results').style.display = 'none';
+    }
+    if (tabId === 'list-tab') {
+        loadDrugList();
     }
 }
 
@@ -263,6 +266,65 @@ window.performCalculation = function() {
     document.getElementById('calc-results').style.display = 'block';
 }
 
-// Initial Boot Run 
+// LOAD DRUG LIST
+async function loadDrugList() {
+    const container = document.getElementById('drug-list-container');
+    container.innerHTML = '<p>Loading...</p>';
+
+    try {
+        const querySnapshot = await getDocs(collection(db, "drugs"));
+        if (querySnapshot.empty) {
+            container.innerHTML = '<p>No drugs in the database.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        querySnapshot.forEach((d) => {
+            const drug = d.data();
+            const id = d.id;
+
+            const rulesHtml = drug.rules.map(r => {
+                if (drug.calcBy === 'range') {
+                    return `<li>${r.start} – ${r.end}: <strong>${r.dosage} ${r.unit}</strong></li>`;
+                }
+                return `<li>Threshold ${r.threshold}: <strong>${r.dosage} ${r.unit}</strong></li>`;
+            }).join('');
+
+            const contraHtml = drug.contraindications && drug.contraindications.length > 0
+                ? `<p class="drug-contra">Contraindications: ${drug.contraindications.join(', ')}</p>`
+                : '';
+
+            const card = document.createElement('div');
+            card.className = 'drug-card';
+            card.innerHTML = `
+                <div class="drug-card-header">
+                    <span class="drug-card-name">${drug.name}</span>
+                    <button class="delete-btn" onclick="deleteDrug('${id}')">Delete</button>
+                </div>
+                <p class="drug-meta">From: <strong>${drug.calcFrom}</strong> &nbsp;|&nbsp; By: <strong>${drug.calcBy}</strong> &nbsp;|&nbsp; ${drug.timesPerDay}x/day</p>
+                <ul class="rules-list">${rulesHtml}</ul>
+                ${contraHtml}
+            `;
+            container.appendChild(card);
+        });
+    } catch (error) {
+        console.error("Error loading drug list:", error);
+        container.innerHTML = '<p>Failed to load drug list.</p>';
+    }
+}
+
+// DELETE DRUG FROM FIRESTORE
+window.deleteDrug = async function(id) {
+    if (!confirm('Delete this drug from the database?')) return;
+    try {
+        await deleteDoc(doc(db, "drugs", id));
+        loadDrugList();
+    } catch (error) {
+        console.error("Error deleting drug:", error);
+        alert("Failed to delete drug.");
+    }
+}
+
+// Initial Boot Run
 toggleFormFields();
 fetchDrugsFromFirebase();

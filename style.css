@@ -99,3 +99,56 @@ button.primary-btn, button.success-btn {
     font-weight: bold;
     margin-top: 10px;
 }
+
+.drug-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 14px;
+}
+
+.drug-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.drug-card-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+.drug-meta {
+    font-size: 0.85rem;
+    color: #718096;
+    margin-bottom: 8px;
+}
+
+.rules-list {
+    margin: 0 0 6px 18px;
+    padding: 0;
+    font-size: 0.9rem;
+    color: #4a5568;
+}
+
+.drug-contra {
+    font-size: 0.85rem;
+    color: #e53e3e;
+    margin-top: 6px;
+}
+
+.delete-btn {
+    padding: 6px 14px;
+    background: #e53e3e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    background: #c53030;
+}

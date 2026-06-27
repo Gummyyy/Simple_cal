@@ -10,7 +10,8 @@
     <div class="app-container">
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('calc-tab')">Calculate Dose</button>
-            <button class="tab-btn" onclick="switchTab('manage-tab')">Manage Drugs</button>
+            <button class="tab-btn" onclick="switchTab('manage-tab')">Add Drug</button>
+            <button class="tab-btn" onclick="switchTab('list-tab')">Drug List</button>
         </div>
 
         <!-- CALCULATE TAB -->
@@ -95,6 +96,15 @@
 
                 <button type="submit" class="success-btn">Save Drug to System</button>
             </form>
+        </div>
+    </div>
+
+        <!-- DRUG LIST TAB -->
+        <div id="list-tab" class="tab-content">
+            <h2>Drug Database</h2>
+            <div id="drug-list-container">
+                <p>Loading...</p>
+            </div>
         </div>
     </div>
 

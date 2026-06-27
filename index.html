@@ -1,55 +1,103 @@
-<div id="manage-tab" class="tab-content">
-    <h2>Add New Drug</h2>
-    <form id="drug-form" onsubmit="saveDrug(event)">
-        <div class="input-group">
-            <label>Drug Name:</label>
-            <input type="text" id="drug-name" required>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drug Dosage Calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('calc-tab')">Calculate Dose</button>
+            <button class="tab-btn" onclick="switchTab('manage-tab')">Manage Drugs</button>
         </div>
 
-        <div class="input-row">
-            <div>
-                <label>Calculated From:</label>
-                <select id="calc-from" onchange="updateCalculatedFromLabels()">
-                    <option value="age">Age</option>
-                    <option value="weight">Weight</option>
-                    <option value="height*weight">Height * Weight</option>
-                    <option value="constant">Constant</option>
-                </select>
+        <!-- CALCULATE TAB -->
+        <div id="calc-tab" class="tab-content active">
+            <h2>Calculate Dosage</h2>
+            <div class="input-group">
+                <label>Select Drug:</label>
+                <select id="calc-drug-select"></select>
             </div>
-            <div>
-                <label>Calculated By:</label>
-                <select id="calc-by" onchange="toggleFormFields()">
-                    <option value="static">Static</option>
-                    <option value="constant">Constant</option>
-                    <option value="range">Range</option>
-                </select>
+            <div class="input-row">
+                <div>
+                    <label>Age (years):</label>
+                    <input type="number" id="patient-age" min="0" placeholder="e.g., 5">
+                </div>
+                <div>
+                    <label>Weight (kg):</label>
+                    <input type="number" id="patient-weight" step="0.1" min="0" placeholder="e.g., 20">
+                </div>
+                <div>
+                    <label>Height (cm):</label>
+                    <input type="number" id="patient-height" step="0.1" min="0" placeholder="e.g., 110">
+                </div>
+            </div>
+            <button class="primary-btn" onclick="performCalculation()">Calculate</button>
+            <div class="results" id="calc-results" style="display: none;">
+                <p><strong>Normal Dose:</strong> <span id="out-normal"></span></p>
+                <p><strong>Total Daily Dose:</strong> <span id="out-emergency"></span></p>
+                <p class="warning" id="out-warning"></p>
             </div>
         </div>
 
-        <div class="input-group">
-            <label>Times per day:</label>
-            <input type="number" id="times-per-day" min="1" placeholder="e.g., 3" required>
-        </div>
-
-        <div id="single-rule-inputs">
-            <h4>Dosage Rules</h4>
-            <div id="single-rule-rows">
+        <!-- MANAGE TAB -->
+        <div id="manage-tab" class="tab-content">
+            <h2>Add New Drug</h2>
+            <form id="drug-form" onsubmit="saveDrug(event)">
+                <div class="input-group">
+                    <label>Drug Name:</label>
+                    <input type="text" id="drug-name" required>
                 </div>
-            <button type="button" id="add-single-btn" onclick="addSingleRuleRow()" style="display: none;">+ Add Rule</button>
-        </div>
 
-        <div id="range-rule-inputs" style="display: none;">
-            <h4>Range Dosage Rules</h4>
-            <div id="range-rows">
+                <div class="input-row">
+                    <div>
+                        <label>Calculated From:</label>
+                        <select id="calc-from" onchange="updateCalculatedFromLabels()">
+                            <option value="age">Age</option>
+                            <option value="weight">Weight</option>
+                            <option value="height*weight">Height * Weight</option>
+                            <option value="constant">Constant</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Calculated By:</label>
+                        <select id="calc-by" onchange="toggleFormFields()">
+                            <option value="static">Static</option>
+                            <option value="constant">Constant</option>
+                            <option value="range">Range</option>
+                        </select>
+                    </div>
                 </div>
-            <button type="button" onclick="addRangeRow()">+ Add Range</button>
-        </div>
 
-        <div class="input-group">
-            <label>Contraindications / Risks (Comma separated):</label>
-            <input type="text" id="contraindications" placeholder="e.g., kidney, digestive, pregnancy">
-        </div>
+                <div class="input-group">
+                    <label>Times per day:</label>
+                    <input type="number" id="times-per-day" min="1" placeholder="e.g., 3" required>
+                </div>
 
-        <button type="submit" class="success-btn">Save Drug to System</button>
-    </form>
-</div>
+                <div id="single-rule-inputs">
+                    <h4>Dosage Rules</h4>
+                    <div id="single-rule-rows"></div>
+                    <button type="button" id="add-single-btn" onclick="addSingleRuleRow()" style="display: none;">+ Add Rule</button>
+                </div>
+
+                <div id="range-rule-inputs" style="display: none;">
+                    <h4>Range Dosage Rules</h4>
+                    <div id="range-rows"></div>
+                    <button type="button" onclick="addRangeRow()">+ Add Range</button>
+                </div>
+
+                <div class="input-group">
+                    <label>Contraindications / Risks (Comma separated):</label>
+                    <input type="text" id="contraindications" placeholder="e.g., kidney, digestive, pregnancy">
+                </div>
+
+                <button type="submit" class="success-btn">Save Drug to System</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

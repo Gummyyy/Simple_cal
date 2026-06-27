@@ -29,14 +29,17 @@ function getUnitText() {
 window.switchTab = function(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    
+
     document.getElementById(tabId).classList.add('active');
-    if (event && event.currentTarget) {
-        event.currentTarget.classList.add('active');
-    }
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.getAttribute('onclick') === `switchTab('${tabId}')`) {
+            btn.classList.add('active');
+        }
+    });
 
     if(tabId === 'calc-tab') {
         fetchDrugsFromFirebase();
+        document.getElementById('calc-results').style.display = 'none';
     }
 }
 
@@ -252,10 +255,12 @@ window.performCalculation = function() {
     document.getElementById('out-emergency').textContent = `${totalDailyDose} ${doseUnit} (Total Daily Dose)`;
 
     if(drug.contraindications && drug.contraindications.length > 0) {
-        document.getElementById('out-warning').textContent = `⚠️ Warnings! Avoid if patient has vulnerabilities in: ${drug.contraindications.join(', ')}`;
+        document.getElementById('out-warning').textContent = `Warning! Avoid if patient has vulnerabilities in: ${drug.contraindications.join(', ')}`;
     } else {
         document.getElementById('out-warning').textContent = '';
     }
+
+    document.getElementById('calc-results').style.display = 'block';
 }
 
 // Initial Boot Run 

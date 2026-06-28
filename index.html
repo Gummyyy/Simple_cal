@@ -17,33 +17,18 @@
         <!-- CALCULATE TAB -->
         <div id="calc-tab" class="tab-content active">
             <h2>Calculate Dosage</h2>
-            <div class="input-group">
-                <label>Select Drug:</label>
-                <select id="calc-drug-select"></select>
-            </div>
-
-            <div class="input-group">
-                <label>Concentration (mg : ml)</label>
-                <div class="concentration-row">
-                    <input type="number" id="conc-mg" value="1" min="0.01" step="0.01">
-                    <span class="conc-sep">:</span>
-                    <input type="number" id="conc-ml" value="1" min="0.01" step="0.01">
-                </div>
-            </div>
 
             <div class="input-group">
                 <label>Patient Weight (kg):</label>
                 <input type="number" id="patient-weight" step="0.1" min="0" placeholder="e.g., 20">
             </div>
 
-            <button class="primary-btn" onclick="performCalculation()">Calculate</button>
-
-            <div class="results" id="calc-results" style="display: none;">
-                <p><strong>Preparation (total daily):</strong> <span id="out-preparation"></span></p>
-                <p><strong>Per Dose:</strong> <span id="out-daily"></span></p>
-                <p id="out-maxdose-note" class="maxdose-note"></p>
-                <p class="warning" id="out-warning"></p>
+            <div class="calc-toolbar">
+                <input type="text" id="drug-search" placeholder="Search drug name...">
+                <button class="primary-btn add-card-btn" onclick="addDrugCard()">+ Add Drug</button>
             </div>
+
+            <div id="drug-cards-container"></div>
         </div>
 
         <!-- ADD DRUG TAB -->
@@ -55,8 +40,12 @@
                     <input type="text" id="drug-name" required>
                 </div>
                 <div class="input-group">
-                    <label>Drug Dose (mg/kg):</label>
-                    <input type="number" id="drug-dose-per-kg" step="0.01" min="0" placeholder="e.g., 5" required>
+                    <label>Dose Range (mg/kg):</label>
+                    <div class="dose-range-row">
+                        <input type="number" id="drug-dose-min" step="0.01" min="0" placeholder="Min" required>
+                        <span class="dose-range-sep">–</span>
+                        <input type="number" id="drug-dose-max" step="0.01" min="0" placeholder="Max" required>
+                    </div>
                 </div>
                 <div class="input-group">
                     <label>Times per Day:</label>
@@ -68,17 +57,11 @@
                 </div>
                 <div class="input-group">
                     <label>Medication Timing:</label>
-                    <select id="medication-timing">
-                        <option value="ante cibum">Ante Cibum — before meal</option>
-                        <option value="post cibum">Post Cibum — after meal</option>
-                        <option value="hora somni">Hora Somni — at bedtime</option>
-                        <option value="pro re nata">Pro Re Nata — as needed</option>
-                        <option value="statim">Statim — immediately</option>
-                    </select>
+                    <input type="text" id="medication-timing" placeholder="e.g. AC, PC, HS, PRN, STAT">
                 </div>
                 <div class="input-group">
                     <label>Caution Note:</label>
-                    <textarea id="caution-note" rows="3" placeholder="e.g., Avoid in renal impairment. Monitor liver function."></textarea>
+                    <textarea id="caution-note" rows="3" placeholder="e.g., Avoid in renal impairment."></textarea>
                 </div>
                 <button type="submit" class="success-btn">Save Drug to System</button>
             </form>
@@ -103,8 +86,12 @@
                     <input type="text" id="edit-drug-name" required>
                 </div>
                 <div class="input-group">
-                    <label>Drug Dose (mg/kg):</label>
-                    <input type="number" id="edit-drug-dose-per-kg" step="0.01" min="0" required>
+                    <label>Dose Range (mg/kg):</label>
+                    <div class="dose-range-row">
+                        <input type="number" id="edit-dose-min" step="0.01" min="0" placeholder="Min" required>
+                        <span class="dose-range-sep">–</span>
+                        <input type="number" id="edit-dose-max" step="0.01" min="0" placeholder="Max" required>
+                    </div>
                 </div>
                 <div class="input-group">
                     <label>Times per Day:</label>
@@ -116,13 +103,7 @@
                 </div>
                 <div class="input-group">
                     <label>Medication Timing:</label>
-                    <select id="edit-medication-timing">
-                        <option value="ante cibum">Ante Cibum — before meal</option>
-                        <option value="post cibum">Post Cibum — after meal</option>
-                        <option value="hora somni">Hora Somni — at bedtime</option>
-                        <option value="pro re nata">Pro Re Nata — as needed</option>
-                        <option value="statim">Statim — immediately</option>
-                    </select>
+                    <input type="text" id="edit-medication-timing" placeholder="e.g. AC, PC, HS, PRN, STAT">
                 </div>
                 <div class="input-group">
                     <label>Caution Note:</label>

@@ -270,3 +270,103 @@ textarea {
 .cancel-btn:hover {
     background: #f7fafc;
 }
+
+/* Dose range row (Add Drug / Edit modal) */
+.dose-range-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.dose-range-row input { flex: 1; }
+.dose-range-sep {
+    font-size: 1.1rem;
+    color: #4a5568;
+    white-space: nowrap;
+}
+
+/* Calc tab top controls */
+.calc-toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.calc-toolbar input {
+    flex: 1;
+}
+.add-card-btn {
+    white-space: nowrap;
+    padding: 10px 16px;
+    width: auto;
+}
+
+/* Calc drug cards */
+#drug-cards-container { margin-top: 4px; }
+
+.calc-drug-card {
+    border: 1px solid #bee3f8;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 14px;
+    background: #f0f8ff;
+}
+.calc-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.calc-card-drug-label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2b6cb0;
+}
+.remove-card-btn {
+    background: #e53e3e;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.remove-card-btn:hover { background: #c53030; }
+
+.card-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.card-row > div { flex: 1; }
+.card-row label {
+    font-size: 0.82rem;
+    margin-bottom: 4px;
+}
+
+.dose-range-hint {
+    font-weight: normal;
+    color: #718096;
+    font-size: 0.78rem;
+    margin-left: 4px;
+}
+
+.card-results {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: #fff;
+    border-left: 4px solid #3182ce;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+.card-results p { margin: 4px 0; }
+.card-results .out-caution {
+    color: #e53e3e;
+    font-weight: bold;
+    margin-top: 6px;
+}
+.card-results .out-maxdose-note {
+    color: #d69e2e;
+    font-size: 0.85rem;
+}

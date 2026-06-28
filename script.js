@@ -50,14 +50,20 @@ const searchInput = document.getElementById('drug-search');
 const searchDropdown = document.getElementById('drug-search-dropdown');
 const addCardBtn = document.getElementById('add-card-btn');
 
+function positionDropdown() {
+    const rect = searchInput.getBoundingClientRect();
+    searchDropdown.style.top = `${rect.bottom + 4}px`;
+    searchDropdown.style.left = `${rect.left}px`;
+    searchDropdown.style.width = `${rect.width}px`;
+}
+
 searchInput.addEventListener('input', function() {
     const term = this.value.trim().toLowerCase();
 
-    // Clear selection when user edits the text
     selectedDrug = null;
     addCardBtn.disabled = true;
 
-    if (!term) {
+    if (term.length < 2) {
         searchDropdown.classList.remove('open');
         return;
     }
@@ -73,7 +79,7 @@ searchInput.addEventListener('input', function() {
             item.className = 'drug-search-option';
             item.textContent = drug.name;
             item.addEventListener('mousedown', function(e) {
-                e.preventDefault(); // prevent input blur before click fires
+                e.preventDefault();
                 selectedDrug = drug;
                 searchInput.value = drug.name;
                 searchDropdown.classList.remove('open');
@@ -83,16 +89,16 @@ searchInput.addEventListener('input', function() {
         });
     }
 
+    positionDropdown();
     searchDropdown.classList.add('open');
 });
 
 searchInput.addEventListener('blur', function() {
-    // Small delay so mousedown on option fires first
     setTimeout(() => searchDropdown.classList.remove('open'), 150);
 });
 
 searchInput.addEventListener('focus', function() {
-    if (this.value.trim() && !selectedDrug) {
+    if (this.value.trim().length >= 2 && !selectedDrug) {
         this.dispatchEvent(new Event('input'));
     }
 });

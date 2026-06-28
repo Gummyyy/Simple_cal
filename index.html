@@ -26,7 +26,6 @@
             <div class="calc-toolbar">
                 <div class="search-wrapper">
                     <input type="text" id="drug-search" placeholder="Search drug..." autocomplete="off">
-                    <div id="drug-search-dropdown" class="drug-search-dropdown"></div>
                 </div>
                 <button id="add-card-btn" class="add-card-btn" onclick="addDrugCard()" disabled>+</button>
             </div>
@@ -60,7 +59,13 @@
                 </div>
                 <div class="input-group">
                     <label>Medication Timing:</label>
-                    <input type="text" id="medication-timing" placeholder="e.g. AC, PC, HS, PRN, STAT">
+                    <select id="medication-timing">
+                        <option value="AC">AC — Before Meal</option>
+                        <option value="PC">PC — After Meal</option>
+                        <option value="HS">HS — At Bedtime</option>
+                        <option value="PRN">PRN — As Needed</option>
+                        <option value="STAT">STAT — Immediately</option>
+                    </select>
                 </div>
                 <div class="input-group">
                     <label>Caution Note:</label>
@@ -106,7 +111,13 @@
                 </div>
                 <div class="input-group">
                     <label>Medication Timing:</label>
-                    <input type="text" id="edit-medication-timing" placeholder="e.g. AC, PC, HS, PRN, STAT">
+                    <select id="edit-medication-timing">
+                        <option value="AC">AC — Before Meal</option>
+                        <option value="PC">PC — After Meal</option>
+                        <option value="HS">HS — At Bedtime</option>
+                        <option value="PRN">PRN — As Needed</option>
+                        <option value="STAT">STAT — Immediately</option>
+                    </select>
                 </div>
                 <div class="input-group">
                     <label>Caution Note:</label>
@@ -119,6 +130,9 @@
             </form>
         </div>
     </div>
+
+    <!-- Dropdown rendered at body level to escape overflow:hidden -->
+    <div id="drug-search-dropdown" class="drug-search-dropdown"></div>
 
     <script type="module" src="script.js"></script>
 </body>

@@ -336,9 +336,13 @@ textarea {
     border-radius: 50%;
     flex-shrink: 0;
     margin-top: 1px;
+    background: #3182ce;
+    color: white;
+    border: none;
 }
 .add-card-btn:disabled {
     background: #a0aec0;
+    color: white;
     cursor: not-allowed;
 }
 

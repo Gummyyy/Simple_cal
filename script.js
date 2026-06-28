@@ -90,7 +90,10 @@ searchInput.addEventListener('input', function() {
         matches.forEach(drug => {
             const item = document.createElement('div');
             item.className = 'drug-search-option';
-            item.textContent = drug.name;
+            const catLabel = drug.category
+                ? drug.category.charAt(0).toUpperCase() + drug.category.slice(1)
+                : '';
+            item.innerHTML = `${drug.name}${catLabel ? ` <span class="category-pill">${catLabel}</span>` : ''}`;
             item.addEventListener('mousedown', function(e) {
                 e.preventDefault();
                 selectedDrug = drug;

@@ -113,6 +113,7 @@ window.addDrugCard = function() {
 
     const doseMin = drug.doseMin ?? drug.dosePerKg ?? 0;
     const doseMax = drug.doseMax ?? drug.dosePerKg ?? 0;
+    const doseUnit = drug.doseUnit || 'mg';
 
     const card = document.createElement('div');
     card.className = 'calc-drug-card';
@@ -125,7 +126,7 @@ window.addDrugCard = function() {
         </div>
         <div class="card-row">
             <div>
-                <label>Concentration (mg : ml)</label>
+                <label>Concentration (${doseUnit} : ml)</label>
                 <div class="concentration-row">
                     <input type="number" class="card-conc-mg" value="1" min="0.01" step="0.01">
                     <span class="conc-sep">:</span>
@@ -133,8 +134,8 @@ window.addDrugCard = function() {
                 </div>
             </div>
             <div>
-                <label>Dose (mg/kg) <span class="dose-range-hint">${doseMin}–${doseMax}</span></label>
-                <input type="number" class="card-dose-input" step="0.01" min="${doseMin}" max="${doseMax}" placeholder="${doseMin}–${doseMax}">
+                <label>Dose (${doseUnit}/kg) <span class="dose-range-hint">${doseMin}–${doseMax}</span></label>
+                <input type="number" class="card-dose-input" step="0.01" min="${doseMin}" max="${doseMax}" placeholder="${doseMin}">
             </div>
         </div>
         <button class="primary-btn" style="margin-bottom:0" onclick="calculateCard(${id})">Calculate</button>
@@ -219,9 +220,10 @@ window.saveDrug = async function(e) {
         name: document.getElementById('drug-name').value.trim(),
         doseMin: parseFloat(document.getElementById('drug-dose-min').value),
         doseMax: parseFloat(document.getElementById('drug-dose-max').value),
+        doseUnit: document.getElementById('drug-dose-unit').value,
         timesPerDay: parseInt(document.getElementById('times-per-day').value),
         maxDose: parseFloat(document.getElementById('max-dose').value) || null,
-        timing: document.getElementById('medication-timing').value.trim(),
+        timing: document.getElementById('medication-timing').value,
         cautionNote: document.getElementById('caution-note').value.trim()
     };
     try {
@@ -300,9 +302,10 @@ window.openEditModal = function(id) {
     document.getElementById('edit-drug-name').value = drug.name;
     document.getElementById('edit-dose-min').value = drug.doseMin ?? drug.dosePerKg ?? '';
     document.getElementById('edit-dose-max').value = drug.doseMax ?? drug.dosePerKg ?? '';
+    document.getElementById('edit-drug-dose-unit').value = drug.doseUnit || 'mg';
     document.getElementById('edit-times-per-day').value = drug.timesPerDay;
     document.getElementById('edit-max-dose').value = drug.maxDose || '';
-    document.getElementById('edit-medication-timing').value = drug.timing || '';
+    document.getElementById('edit-medication-timing').value = drug.timing || 'AC';
     document.getElementById('edit-caution-note').value = drug.cautionNote || '';
     document.getElementById('edit-modal').style.display = 'flex';
 }
@@ -319,9 +322,10 @@ window.saveEditDrug = async function(e) {
         name: document.getElementById('edit-drug-name').value.trim(),
         doseMin: parseFloat(document.getElementById('edit-dose-min').value),
         doseMax: parseFloat(document.getElementById('edit-dose-max').value),
+        doseUnit: document.getElementById('edit-drug-dose-unit').value,
         timesPerDay: parseInt(document.getElementById('edit-times-per-day').value),
         maxDose: parseFloat(document.getElementById('edit-max-dose').value) || null,
-        timing: document.getElementById('edit-medication-timing').value.trim(),
+        timing: document.getElementById('edit-medication-timing').value,
         cautionNote: document.getElementById('edit-caution-note').value.trim()
     };
     try {

@@ -93,7 +93,9 @@ searchInput.addEventListener('input', function() {
             const catLabel = drug.category
                 ? drug.category.charAt(0).toUpperCase() + drug.category.slice(1)
                 : '';
-            item.innerHTML = `${drug.name}${catLabel ? ` <span class="category-pill">${catLabel}</span>` : ''}`;
+            item.innerHTML = drug.name + (catLabel
+                ? ` <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;background:#fefcbf;color:#744210;margin-left:4px">${catLabel}</span>`
+                : '');
             item.addEventListener('mousedown', function(e) {
                 e.preventDefault();
                 selectedDrug = drug;

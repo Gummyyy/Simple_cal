@@ -134,9 +134,16 @@ window.addDrugCard = function() {
     card.className = 'calc-drug-card';
     card.id = `drug-card-${id}`;
     card.dataset.drugId = drug.id;
+    const categoryLabel = drug.category
+        ? drug.category.charAt(0).toUpperCase() + drug.category.slice(1)
+        : '';
+
     card.innerHTML = `
         <div class="calc-card-header">
-            <span class="calc-card-drug-label">${drug.name}</span>
+            <div class="calc-card-title">
+                <span class="calc-card-drug-label">${drug.name}</span>
+                ${categoryLabel ? `<span class="category-pill">${categoryLabel}</span>` : ''}
+            </div>
             <button class="remove-card-btn" onclick="removeDrugCard(${id})">×</button>
         </div>
         <div class="card-row">
@@ -150,7 +157,7 @@ window.addDrugCard = function() {
             </div>
             <div>
                 <label>Dose (${doseUnit}/kg) <span class="dose-range-hint">${doseMin}–${doseMax}</span></label>
-                <input type="number" class="card-dose-input" step="0.01" min="${doseMin}" max="${doseMax}" placeholder="${doseMin}">
+                <input type="number" class="card-dose-input" step="0.01" min="${doseMin}" max="${doseMax}" value="${doseMin}" placeholder="${doseMin}">
             </div>
         </div>
         <button class="primary-btn" style="margin-bottom:0" onclick="calculateCard(${id})">Calculate</button>

@@ -362,10 +362,27 @@ textarea {
     align-items: center;
     margin-bottom: 12px;
 }
+.calc-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
 .calc-card-drug-label {
     font-size: 1rem;
     font-weight: 700;
     color: #2b6cb0;
+}
+
+.category-pill {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: #fefcbf;
+    color: #744210;
 }
 .remove-card-btn {
     background: #e53e3e;

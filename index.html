@@ -42,19 +42,20 @@
                     <input type="text" id="drug-name" required>
                 </div>
                 <div class="input-group">
+                    <label>Category:</label>
+                    <select id="drug-category">
+                        <option value="tablet">Tablet</option>
+                        <option value="syrup">Syrup</option>
+                        <option value="injection">Injection</option>
+                    </select>
+                </div>
+                <div class="input-group">
                     <label>Dose Range:</label>
                     <div class="dose-range-row">
                         <input type="number" id="drug-dose-min" step="0.01" min="0" placeholder="Min" required>
                         <span class="dose-range-sep">–</span>
                         <input type="number" id="drug-dose-max" step="0.01" min="0" placeholder="Max" required>
                     </div>
-                </div>
-                <div class="input-group">
-                    <label>Dose Unit / Body Weight:</label>
-                    <select id="drug-dose-unit">
-                        <option value="mg">mg / kg</option>
-                        <option value="unit">unit / kg</option>
-                    </select>
                 </div>
                 <div class="input-group">
                     <label>Times per Day:</label>
@@ -101,19 +102,20 @@
                     <input type="text" id="edit-drug-name" required>
                 </div>
                 <div class="input-group">
+                    <label>Category:</label>
+                    <select id="edit-drug-category">
+                        <option value="tablet">Tablet</option>
+                        <option value="syrup">Syrup</option>
+                        <option value="injection">Injection</option>
+                    </select>
+                </div>
+                <div class="input-group">
                     <label>Dose Range:</label>
                     <div class="dose-range-row">
                         <input type="number" id="edit-dose-min" step="0.01" min="0" placeholder="Min" required>
                         <span class="dose-range-sep">–</span>
                         <input type="number" id="edit-dose-max" step="0.01" min="0" placeholder="Max" required>
                     </div>
-                </div>
-                <div class="input-group">
-                    <label>Dose Unit / Body Weight:</label>
-                    <select id="edit-drug-dose-unit">
-                        <option value="mg">mg / kg</option>
-                        <option value="unit">unit / kg</option>
-                    </select>
                 </div>
                 <div class="input-group">
                     <label>Times per Day:</label>

@@ -18,6 +18,19 @@ let drugDatabase = [];
 let cardCounter = 0;
 let selectedDrug = null;
 
+// Category helpers — single source of truth for units
+function getDoseUnit(category) {
+    return category === 'injection' ? 'unit' : 'mg';
+}
+function getVolumeUnit(category) {
+    return category === 'tablet' ? 'tablet' : 'ml';
+}
+function getConcLabel(category) {
+    if (category === 'tablet')    return 'mg : tablet';
+    if (category === 'injection') return 'unit : ml';
+    return 'mg : ml'; // syrup + legacy
+}
+
 // TAB NAVIGATION
 window.switchTab = function(tabId) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -113,7 +126,9 @@ window.addDrugCard = function() {
 
     const doseMin = drug.doseMin ?? drug.dosePerKg ?? 0;
     const doseMax = drug.doseMax ?? drug.dosePerKg ?? 0;
-    const doseUnit = drug.doseUnit || 'mg';
+    const doseUnit = getDoseUnit(drug.category);
+    const concLabel = getConcLabel(drug.category);
+    const volUnit = getVolumeUnit(drug.category);
 
     const card = document.createElement('div');
     card.className = 'calc-drug-card';
@@ -126,7 +141,7 @@ window.addDrugCard = function() {
         </div>
         <div class="card-row">
             <div>
-                <label>Concentration (${doseUnit} : ml)</label>
+                <label>Concentration (${concLabel})</label>
                 <div class="concentration-row">
                     <input type="number" class="card-conc-mg" value="1" min="0.01" step="0.01">
                     <span class="conc-sep">:</span>
@@ -179,31 +194,33 @@ window.calculateCard = function(cardId) {
 
     const doseMin = drug.doseMin ?? drug.dosePerKg ?? 0;
     const doseMax = drug.doseMax ?? drug.dosePerKg ?? dosePerKgInput;
+    const doseUnit = getDoseUnit(drug.category);
+    const volUnit = getVolumeUnit(drug.category);
     const concentration = concMg / concMl;
 
-    let doseMg = dosePerKgInput * weight;
+    let doseAmount = dosePerKgInput * weight;
     let cappedByMax = false;
-    if (drug.maxDose && doseMg > drug.maxDose) {
-        doseMg = drug.maxDose;
+    if (drug.maxDose && doseAmount > drug.maxDose) {
+        doseAmount = drug.maxDose;
         cappedByMax = true;
     }
 
-    const dailyMl = doseMg / concentration;
-    const perDoseMl = dailyMl / drug.timesPerDay;
-    const perDoseMg = doseMg / drug.timesPerDay;
+    const dailyVol = doseAmount / concentration;
+    const perDoseVol = dailyVol / drug.timesPerDay;
+    const perDoseAmount = doseAmount / drug.timesPerDay;
     const timingHtml = drug.timing ? ` <strong>${drug.timing}</strong>` : '';
 
     card.querySelector('.out-preparation').textContent =
-        `${dailyMl.toFixed(2)} ml  (${doseMg.toFixed(2)} mg)`;
+        `${dailyVol.toFixed(2)} ${volUnit}  (${doseAmount.toFixed(2)} ${doseUnit})`;
     card.querySelector('.out-daily').innerHTML =
-        `${perDoseMl.toFixed(2)} ml  (${perDoseMg.toFixed(2)} mg)  ×  ${drug.timesPerDay} times/day${timingHtml}`;
+        `${perDoseVol.toFixed(2)} ${volUnit}  (${perDoseAmount.toFixed(2)} ${doseUnit})  ×  ${drug.timesPerDay} times/day${timingHtml}`;
 
     const maxNote = card.querySelector('.out-maxdose-note');
     const outOfRange = dosePerKgInput < doseMin || dosePerKgInput > doseMax;
     if (cappedByMax) {
-        maxNote.textContent = `Note: Dose capped at maximum of ${drug.maxDose} mg.`;
+        maxNote.textContent = `Note: Dose capped at maximum of ${drug.maxDose} ${doseUnit}.`;
     } else if (outOfRange) {
-        maxNote.textContent = `Warning: ${dosePerKgInput} mg/kg is outside range (${doseMin}–${doseMax}).`;
+        maxNote.textContent = `Warning: ${dosePerKgInput} ${doseUnit}/kg is outside range (${doseMin}–${doseMax}).`;
     } else {
         maxNote.textContent = '';
     }
@@ -218,9 +235,9 @@ window.saveDrug = async function(e) {
     e.preventDefault();
     const newDrug = {
         name: document.getElementById('drug-name').value.trim(),
+        category: document.getElementById('drug-category').value,
         doseMin: parseFloat(document.getElementById('drug-dose-min').value),
         doseMax: parseFloat(document.getElementById('drug-dose-max').value),
-        doseUnit: document.getElementById('drug-dose-unit').value,
         timesPerDay: parseInt(document.getElementById('times-per-day').value),
         maxDose: parseFloat(document.getElementById('max-dose').value) || null,
         timing: document.getElementById('medication-timing').value,
@@ -251,10 +268,14 @@ async function loadDrugList() {
     }
     container.innerHTML = '';
     drugDatabase.forEach(drug => {
+        const doseUnit = getDoseUnit(drug.category);
         const doseDisplay = drug.doseMin !== undefined
-            ? `${drug.doseMin}–${drug.doseMax} mg/kg`
-            : `${drug.dosePerKg} mg/kg`;
-        const maxDoseHtml = drug.maxDose ? `<span>Max: <strong>${drug.maxDose} mg</strong></span>` : '';
+            ? `${drug.doseMin}–${drug.doseMax} ${doseUnit}/kg`
+            : `${drug.dosePerKg} ${doseUnit}/kg`;
+        const maxDoseHtml = drug.maxDose ? `<span>Max: <strong>${drug.maxDose} ${doseUnit}</strong></span>` : '';
+        const categoryLabel = drug.category
+            ? `<span class="timing-badge" style="background:#fefcbf;color:#744210">${drug.category.charAt(0).toUpperCase() + drug.category.slice(1)}</span>`
+            : '';
         const timingHtml = drug.timing ? `<span class="timing-badge">${drug.timing}</span>` : '';
         const cautionHtml = drug.cautionNote
             ? `<p class="drug-contra">Caution: ${drug.cautionNote}</p>` : '';
@@ -274,7 +295,9 @@ async function loadDrugList() {
                 <span>${drug.timesPerDay}x/day</span>
                 ${maxDoseHtml}
             </div>
-            ${timingHtml}
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+                ${categoryLabel}${timingHtml}
+            </div>
             ${cautionHtml}
         `;
         container.appendChild(card);
@@ -300,9 +323,9 @@ window.openEditModal = function(id) {
     if (!drug) return;
     document.getElementById('edit-drug-form').dataset.editId = id;
     document.getElementById('edit-drug-name').value = drug.name;
+    document.getElementById('edit-drug-category').value = drug.category || 'syrup';
     document.getElementById('edit-dose-min').value = drug.doseMin ?? drug.dosePerKg ?? '';
     document.getElementById('edit-dose-max').value = drug.doseMax ?? drug.dosePerKg ?? '';
-    document.getElementById('edit-drug-dose-unit').value = drug.doseUnit || 'mg';
     document.getElementById('edit-times-per-day').value = drug.timesPerDay;
     document.getElementById('edit-max-dose').value = drug.maxDose || '';
     document.getElementById('edit-medication-timing').value = drug.timing || 'AC';
@@ -320,9 +343,9 @@ window.saveEditDrug = async function(e) {
     const id = document.getElementById('edit-drug-form').dataset.editId;
     const updated = {
         name: document.getElementById('edit-drug-name').value.trim(),
+        category: document.getElementById('edit-drug-category').value,
         doseMin: parseFloat(document.getElementById('edit-dose-min').value),
         doseMax: parseFloat(document.getElementById('edit-dose-max').value),
-        doseUnit: document.getElementById('edit-drug-dose-unit').value,
         timesPerDay: parseInt(document.getElementById('edit-times-per-day').value),
         maxDose: parseFloat(document.getElementById('edit-max-dose').value) || null,
         timing: document.getElementById('edit-medication-timing').value,

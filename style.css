@@ -287,16 +287,62 @@ textarea {
 /* Calc tab top controls */
 .calc-toolbar {
     display: flex;
-    gap: 10px;
+    align-items: flex-start;
+    gap: 8px;
     margin-bottom: 20px;
 }
-.calc-toolbar input {
+
+.search-wrapper {
+    position: relative;
     flex: 1;
 }
+.search-wrapper input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.drug-search-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 50;
+    max-height: 200px;
+    overflow-y: auto;
+}
+.drug-search-dropdown.open { display: block; }
+
+.drug-search-option {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #2d3748;
+}
+.drug-search-option:hover { background: #ebf8ff; }
+.drug-search-option.no-result {
+    color: #a0aec0;
+    cursor: default;
+}
+.drug-search-option.no-result:hover { background: none; }
+
 .add-card-btn {
-    white-space: nowrap;
-    padding: 10px 16px;
-    width: auto;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    font-size: 1.4rem;
+    line-height: 1;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.add-card-btn:disabled {
+    background: #a0aec0;
+    cursor: not-allowed;
 }
 
 /* Calc drug cards */

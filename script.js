@@ -16,17 +16,16 @@ const db = getFirestore(app);
 
 let drugDatabase = [];
 let cardCounter = 0;
+let selectedDrug = null;
 
 // TAB NAVIGATION
 window.switchTab = function(tabId) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
     document.getElementById(tabId).classList.add('active');
     document.querySelectorAll('.tab-btn').forEach(b => {
         if (b.getAttribute('onclick') === `switchTab('${tabId}')`) b.classList.add('active');
     });
-
     if (tabId === 'calc-tab') fetchDrugsFromFirebase();
     if (tabId === 'list-tab') loadDrugList();
 }
@@ -41,62 +40,82 @@ async function fetchDrugsFromFirebase() {
             data.id = d.id;
             drugDatabase.push(data);
         });
-        updateAllCardSelects(document.getElementById('drug-search')?.value || '');
     } catch (err) {
         console.error(err);
     }
 }
 
-// SEARCH — updates every card's drug select filtered by search term
-function updateAllCardSelects(searchTerm = '') {
-    const filtered = searchTerm
-        ? drugDatabase.filter(d => d.name.toLowerCase().includes(searchTerm.toLowerCase()))
-        : drugDatabase;
+// SEARCH DROPDOWN
+const searchInput = document.getElementById('drug-search');
+const searchDropdown = document.getElementById('drug-search-dropdown');
+const addCardBtn = document.getElementById('add-card-btn');
 
-    document.querySelectorAll('.card-drug-select').forEach(select => {
-        const currentVal = select.value;
-        select.innerHTML = '<option value="">-- Select Drug --</option>';
-        filtered.forEach(drug => {
-            const opt = document.createElement('option');
-            opt.value = drug.id;
-            opt.textContent = drug.name;
-            if (drug.id === currentVal) opt.selected = true;
-            select.appendChild(opt);
+searchInput.addEventListener('input', function() {
+    const term = this.value.trim().toLowerCase();
+
+    // Clear selection when user edits the text
+    selectedDrug = null;
+    addCardBtn.disabled = true;
+
+    if (!term) {
+        searchDropdown.classList.remove('open');
+        return;
+    }
+
+    const matches = drugDatabase.filter(d => d.name.toLowerCase().includes(term));
+    searchDropdown.innerHTML = '';
+
+    if (matches.length === 0) {
+        searchDropdown.innerHTML = '<div class="drug-search-option no-result">No drugs found</div>';
+    } else {
+        matches.forEach(drug => {
+            const item = document.createElement('div');
+            item.className = 'drug-search-option';
+            item.textContent = drug.name;
+            item.addEventListener('mousedown', function(e) {
+                e.preventDefault(); // prevent input blur before click fires
+                selectedDrug = drug;
+                searchInput.value = drug.name;
+                searchDropdown.classList.remove('open');
+                addCardBtn.disabled = false;
+            });
+            searchDropdown.appendChild(item);
         });
-    });
-}
+    }
 
-document.getElementById('drug-search').addEventListener('input', function() {
-    updateAllCardSelects(this.value);
+    searchDropdown.classList.add('open');
+});
+
+searchInput.addEventListener('blur', function() {
+    // Small delay so mousedown on option fires first
+    setTimeout(() => searchDropdown.classList.remove('open'), 150);
+});
+
+searchInput.addEventListener('focus', function() {
+    if (this.value.trim() && !selectedDrug) {
+        this.dispatchEvent(new Event('input'));
+    }
 });
 
 // ADD DRUG CARD
 window.addDrugCard = function() {
-    if (drugDatabase.length === 0) {
-        alert('Drug database is still loading. Please wait.');
-        return;
-    }
+    if (!selectedDrug) return;
+
+    const drug = selectedDrug;
     cardCounter++;
     const id = cardCounter;
 
-    const optionsHtml = drugDatabase.map(d =>
-        `<option value="${d.id}">${d.name}</option>`
-    ).join('');
+    const doseMin = drug.doseMin ?? drug.dosePerKg ?? 0;
+    const doseMax = drug.doseMax ?? drug.dosePerKg ?? 0;
 
     const card = document.createElement('div');
     card.className = 'calc-drug-card';
     card.id = `drug-card-${id}`;
+    card.dataset.drugId = drug.id;
     card.innerHTML = `
         <div class="calc-card-header">
-            <span class="calc-card-drug-label">Select a drug</span>
+            <span class="calc-card-drug-label">${drug.name}</span>
             <button class="remove-card-btn" onclick="removeDrugCard(${id})">×</button>
-        </div>
-        <div class="input-group" style="margin-bottom:12px">
-            <label>Drug:</label>
-            <select class="card-drug-select" onchange="onCardDrugChange(this, ${id})">
-                <option value="">-- Select Drug --</option>
-                ${optionsHtml}
-            </select>
         </div>
         <div class="card-row">
             <div>
@@ -108,8 +127,8 @@ window.addDrugCard = function() {
                 </div>
             </div>
             <div>
-                <label>Dose (mg/kg) <span class="dose-range-hint" id="hint-${id}"></span></label>
-                <input type="number" class="card-dose-input" step="0.01" min="0" placeholder="Enter dose">
+                <label>Dose (mg/kg) <span class="dose-range-hint">${doseMin}–${doseMax}</span></label>
+                <input type="number" class="card-dose-input" step="0.01" min="${doseMin}" max="${doseMax}" placeholder="${doseMin}–${doseMax}">
             </div>
         </div>
         <button class="primary-btn" style="margin-bottom:0" onclick="calculateCard(${id})">Calculate</button>
@@ -122,45 +141,17 @@ window.addDrugCard = function() {
     `;
 
     document.getElementById('drug-cards-container').appendChild(card);
+
+    // Reset search after adding
+    searchInput.value = '';
+    selectedDrug = null;
+    addCardBtn.disabled = true;
 }
 
 // REMOVE DRUG CARD
 window.removeDrugCard = function(id) {
     const el = document.getElementById(`drug-card-${id}`);
     if (el) el.remove();
-}
-
-// DRUG SELECTED IN A CARD — update label, dose range hint, input constraints
-window.onCardDrugChange = function(selectEl, cardId) {
-    const drug = drugDatabase.find(d => d.id === selectEl.value);
-    const card = document.getElementById(`drug-card-${cardId}`);
-    if (!card) return;
-
-    const label = card.querySelector('.calc-card-drug-label');
-    const hint = document.getElementById(`hint-${cardId}`);
-    const doseInput = card.querySelector('.card-dose-input');
-    const results = card.querySelector('.card-results');
-
-    if (!drug) {
-        label.textContent = 'Select a drug';
-        hint.textContent = '';
-        doseInput.removeAttribute('min');
-        doseInput.removeAttribute('max');
-        doseInput.value = '';
-        results.style.display = 'none';
-        return;
-    }
-
-    label.textContent = drug.name;
-
-    const doseMin = drug.doseMin ?? drug.dosePerKg ?? 0;
-    const doseMax = drug.doseMax ?? drug.dosePerKg ?? 0;
-
-    hint.textContent = `Range: ${doseMin}–${doseMax}`;
-    doseInput.min = doseMin;
-    doseInput.max = doseMax;
-    doseInput.placeholder = `${doseMin}–${doseMax}`;
-    results.style.display = 'none';
 }
 
 // CALCULATE PER CARD
@@ -171,23 +162,20 @@ window.calculateCard = function(cardId) {
     const weight = parseFloat(document.getElementById('patient-weight').value) || 0;
     if (weight <= 0) { alert('Please enter patient weight at the top.'); return; }
 
-    const drugId = card.querySelector('.card-drug-select').value;
-    const drug = drugDatabase.find(d => d.id === drugId);
-    if (!drug) { alert('Please select a drug.'); return; }
+    const drug = drugDatabase.find(d => d.id === card.dataset.drugId);
+    if (!drug) { alert('Drug data not found. Please reload.'); return; }
 
     const concMg = parseFloat(card.querySelector('.card-conc-mg').value) || 1;
     const concMl = parseFloat(card.querySelector('.card-conc-ml').value) || 1;
     const dosePerKgInput = parseFloat(card.querySelector('.card-dose-input').value);
-
     if (isNaN(dosePerKgInput) || dosePerKgInput <= 0) { alert('Please enter a dose.'); return; }
 
     const doseMin = drug.doseMin ?? drug.dosePerKg ?? 0;
     const doseMax = drug.doseMax ?? drug.dosePerKg ?? dosePerKgInput;
-
     const concentration = concMg / concMl;
+
     let doseMg = dosePerKgInput * weight;
     let cappedByMax = false;
-
     if (drug.maxDose && doseMg > drug.maxDose) {
         doseMg = drug.maxDose;
         cappedByMax = true;
@@ -196,7 +184,6 @@ window.calculateCard = function(cardId) {
     const dailyMl = doseMg / concentration;
     const perDoseMl = dailyMl / drug.timesPerDay;
     const perDoseMg = doseMg / drug.timesPerDay;
-
     const timingHtml = drug.timing ? ` <strong>${drug.timing}</strong>` : '';
 
     card.querySelector('.out-preparation').textContent =
@@ -209,14 +196,13 @@ window.calculateCard = function(cardId) {
     if (cappedByMax) {
         maxNote.textContent = `Note: Dose capped at maximum of ${drug.maxDose} mg.`;
     } else if (outOfRange) {
-        maxNote.textContent = `Warning: ${dosePerKgInput} mg/kg is outside recommended range (${doseMin}–${doseMax}).`;
+        maxNote.textContent = `Warning: ${dosePerKgInput} mg/kg is outside range (${doseMin}–${doseMax}).`;
     } else {
         maxNote.textContent = '';
     }
 
     card.querySelector('.out-caution').textContent =
         drug.cautionNote ? `Caution: ${drug.cautionNote}` : '';
-
     card.querySelector('.card-results').style.display = 'block';
 }
 
@@ -232,7 +218,6 @@ window.saveDrug = async function(e) {
         timing: document.getElementById('medication-timing').value.trim(),
         cautionNote: document.getElementById('caution-note').value.trim()
     };
-
     try {
         await addDoc(collection(db, "drugs"), newDrug);
         alert('Drug saved successfully!');
@@ -256,7 +241,6 @@ async function loadDrugList() {
         container.innerHTML = '<p>No drugs in the database.</p>';
         return;
     }
-
     container.innerHTML = '';
     drugDatabase.forEach(drug => {
         const doseDisplay = drug.doseMin !== undefined
@@ -265,8 +249,7 @@ async function loadDrugList() {
         const maxDoseHtml = drug.maxDose ? `<span>Max: <strong>${drug.maxDose} mg</strong></span>` : '';
         const timingHtml = drug.timing ? `<span class="timing-badge">${drug.timing}</span>` : '';
         const cautionHtml = drug.cautionNote
-            ? `<p class="drug-contra">Caution: ${drug.cautionNote}</p>`
-            : '';
+            ? `<p class="drug-contra">Caution: ${drug.cautionNote}</p>` : '';
 
         const card = document.createElement('div');
         card.className = 'drug-card';
@@ -307,7 +290,6 @@ window.deleteDrug = async function(id) {
 window.openEditModal = function(id) {
     const drug = drugDatabase.find(d => d.id === id);
     if (!drug) return;
-
     document.getElementById('edit-drug-form').dataset.editId = id;
     document.getElementById('edit-drug-name').value = drug.name;
     document.getElementById('edit-dose-min').value = drug.doseMin ?? drug.dosePerKg ?? '';
@@ -316,7 +298,6 @@ window.openEditModal = function(id) {
     document.getElementById('edit-max-dose').value = drug.maxDose || '';
     document.getElementById('edit-medication-timing').value = drug.timing || '';
     document.getElementById('edit-caution-note').value = drug.cautionNote || '';
-
     document.getElementById('edit-modal').style.display = 'flex';
 }
 
@@ -337,7 +318,6 @@ window.saveEditDrug = async function(e) {
         timing: document.getElementById('edit-medication-timing').value.trim(),
         cautionNote: document.getElementById('edit-caution-note').value.trim()
     };
-
     try {
         await updateDoc(doc(db, "drugs", id), updated);
         closeEditModal();

@@ -24,8 +24,11 @@
             </div>
 
             <div class="calc-toolbar">
-                <input type="text" id="drug-search" placeholder="Search drug name...">
-                <button class="primary-btn add-card-btn" onclick="addDrugCard()">+ Add Drug</button>
+                <div class="search-wrapper">
+                    <input type="text" id="drug-search" placeholder="Search drug..." autocomplete="off">
+                    <div id="drug-search-dropdown" class="drug-search-dropdown"></div>
+                </div>
+                <button id="add-card-btn" class="add-card-btn" onclick="addDrugCard()" disabled>+</button>
             </div>
 
             <div id="drug-cards-container"></div>

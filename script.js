@@ -72,6 +72,7 @@ window.saveDrug = async function(e) {
         dosePerKg: parseFloat(document.getElementById('drug-dose-per-kg').value),
         timesPerDay: parseInt(document.getElementById('times-per-day').value),
         maxDose: parseFloat(document.getElementById('max-dose').value) || null,
+        timing: document.getElementById('medication-timing').value,
         cautionNote: document.getElementById('caution-note').value.trim()
     };
 
@@ -122,7 +123,9 @@ window.performCalculation = function() {
         : '';
 
     const warningEl = document.getElementById('out-warning');
-    warningEl.textContent = drug.cautionNote ? `Caution: ${drug.cautionNote}` : '';
+    const timingText = drug.timing ? `Timing: ${drug.timing}` : '';
+    const cautionText = drug.cautionNote ? `Caution: ${drug.cautionNote}` : '';
+    warningEl.textContent = [timingText, cautionText].filter(Boolean).join('  |  ');
 
     document.getElementById('calc-results').style.display = 'block';
 }
@@ -141,7 +144,8 @@ async function loadDrugList() {
 
     container.innerHTML = '';
     drugDatabase.forEach(drug => {
-        const maxDoseHtml = drug.maxDose ? `<span>Max dose: <strong>${drug.maxDose} mg</strong></span>` : '';
+        const maxDoseHtml = drug.maxDose ? `<span>Max: <strong>${drug.maxDose} mg</strong></span>` : '';
+        const timingHtml = drug.timing ? `<span class="timing-badge">${drug.timing}</span>` : '';
         const cautionHtml = drug.cautionNote
             ? `<p class="drug-contra">Caution: ${drug.cautionNote}</p>`
             : '';
@@ -161,6 +165,7 @@ async function loadDrugList() {
                 <span>${drug.timesPerDay}x/day</span>
                 ${maxDoseHtml}
             </div>
+            ${timingHtml}
             ${cautionHtml}
         `;
         container.appendChild(card);
@@ -190,6 +195,7 @@ window.openEditModal = function(id) {
     document.getElementById('edit-drug-dose-per-kg').value = drug.dosePerKg;
     document.getElementById('edit-times-per-day').value = drug.timesPerDay;
     document.getElementById('edit-max-dose').value = drug.maxDose || '';
+    document.getElementById('edit-medication-timing').value = drug.timing || 'ante cibum';
     document.getElementById('edit-caution-note').value = drug.cautionNote || '';
 
     document.getElementById('edit-modal').style.display = 'flex';
@@ -208,6 +214,7 @@ window.saveEditDrug = async function(e) {
         dosePerKg: parseFloat(document.getElementById('edit-drug-dose-per-kg').value),
         timesPerDay: parseInt(document.getElementById('edit-times-per-day').value),
         maxDose: parseFloat(document.getElementById('edit-max-dose').value) || null,
+        timing: document.getElementById('edit-medication-timing').value,
         cautionNote: document.getElementById('edit-caution-note').value.trim()
     };
 
